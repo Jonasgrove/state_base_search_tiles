@@ -5,35 +5,42 @@ import copy
 #solvegame
 def solve8Tile(sState,goal):
     path = []
-    return stateSearch([sState],goal,path)
+    recLimit = 50
+    seen = []
+    return stateSearch([sState],goal,path,recLimit,seen)
 
-def stateSearch(states,goal,path):
+def stateSearch(states,goal,path,recLimit,seen):
     if states == []:
-        print(states)
+        print("exit1",states)
         return states
     
     elif goal == states[0]:
-        print(goal+path)
+        print("exit success",goal+path)
         return goal + path
-    
-    elif (states[0] in path) == True:      #cycle checker
-        stateSearch(states[1:],goal,path)
-        
+
     else:
-        result = stateSearch(newMoves(states[0]),goal,states[0]+path)
-        
-        if result != []:
-            return result            #trippy recursion
+        if recLimit == 0:
+          print([])
+          print("states",states)
+          print("path",path)
+          return []
         else:
-            stateSearch(states[1:],goal,path)
+          moves,seen = newMoves(states[0],seen)
+          result = stateSearch(moves,goal,[states[0]]+path,recLimit-1,seen)
+        
+          if result != []:
+            return result            #trippy recursion
+          else:
+            stateSearch(states[1:],goal,path,recLimit-1,seen)
 
        
 #generate new moves
-def newMoves(board):
+def newMoves(board,seen):
     allMoves = []
+    print("the board is",board)
     for i in range(len(board)):
         for j in range(len(board)):
-            if i == 0 or i == 1:            #if any tile in the first or second row is ontop of a one, swap them
+            if i == 0 or i == 1:            #if any tile in the first or second row is ontop of a zero, swap them
                 if board[i+1][j] == 0:      
                     allMoves.append(downSlide(i,j,board))
             if i == 1 or i == 2:             #if any tile in the 2nd or 3rd row is below a zero, swap them
@@ -45,37 +52,53 @@ def newMoves(board):
             if j == 1 or j == 2:            #if any tile in the 2nd or 3rd column is to the right of a zero, swap
                 if board[i][j-1] == 0:
                     allMoves.append(leftSlide(i,j,board))
-    return allMoves
+    
+    #check if move has already been tried
+    counter = 0
+    for i in allMoves:
+      for j in seen:
+        if i == j:
+          del allMoves[counter]
+          counter-=1
+      counter+=1
+    seen = allMoves + seen
+    print("allMoves",allMoves)
+    return allMoves, seen
 
 #tile moving functions
 def downSlide(i,j,board):
-    newBoard = board
-    temp = newBoard[i][j]
-    newBoard[i][j] = newBoard[i+1][j]
-    newBoard[i+1][j] = temp
-    return newBoard
+  board2 = copy.deepcopy(board)
+  temp = board2[i][j]
+  board2[i][j] = board2[i+1][j]
+  board2[i+1][j] = temp
+  print("down",board2)
+  return board2
 
 def upSlide(i,j,board):
-    newBoard = board
-    temp = newBoard[i][j]
-    newBoard[i][j] = newBoard[i-1][j]
-    newBoard[i-1][j] = temp
-    return newBoard
+
+  board2 = copy.deepcopy(board)
+  temp = board2[i][j]
+  board2[i][j] = board2[i-1][j]
+  board2[i-1][j] = temp
+  print("up",board2)
+  return board2
 
 def rightSlide(i,j,board):
-    newBoard = board
-    temp = newBoard[i][j]
-    newBoard[i][j] = newBoard[i][j+1]
-    newBoard[i][j+1] = temp
-    return newBoard
+  board2 = copy.deepcopy(board)
+  temp = board2[i][j]
+  board2[i][j] = board2[i][j+1]
+  board2[i][j+1] = temp
+  print("right",board2)
+  return board2
 
 def leftSlide(i,j,board):
-    newBoard = board
-    temp = newBoard[i][j]
-    newBoard[i][j] = newBoard[i][j-1]
-    newBoard[i][j-1] = temp
-    return newBoard
+  board2 = copy.deepcopy(board)
+  temp = board2[i][j]
+  board2[i][j] = board2[i][j-1]
+  board2[i][j-1] = temp
+  print("left",board2)
+  return board2
 
 
-
-solve8Tile([[1,0,3],[8,2,4],[7,6,5]],[[1,2,3],[8,0,4],[7,6,5]])
+#this start and goal state combination works
+#solve8Tile([[1,2,3],[0,6,4],[8,7,5]],[[2,3,0],[1,6,4],[8,7,5]])
